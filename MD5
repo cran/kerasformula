@@ -1,0 +1,11 @@
+63f565ff20197f6eb6f58ae889b3cb13 *DESCRIPTION
+6e64bd5353e1a916cb38a93c4190240d *NAMESPACE
+56bd8ac63ca730716bfaec9b61cd54b9 *R/confusion.R
+2c74829ba41ccadb57b8fea604be50a4 *R/kms.R
+d8bfbb6775616fa7a43d570082901395 *build/vignette.rds
+a8de7abd438a7b006f5bfeff9d37f84c *inst/doc/kerasformula.R
+116e5f0f99ac745bbe48baebaef79bef *inst/doc/kerasformula.Rmd
+36d327a20a71b62d477a049fe48eeb16 *inst/doc/kerasformula.html
+ed5d42814ce845babb1704edd341d4ab *man/confusion.Rd
+21656db3445e0c0c8d4f6cb0a24de095 *man/kms.Rd
+116e5f0f99ac745bbe48baebaef79bef *vignettes/kerasformula.Rmd
