@@ -210,11 +210,11 @@ library(keras)
 install_keras() # see https://keras.rstudio.com/ for details. 
 </code></pre>
 
-<p><code>kms</code> splits training and test data into sparse matrices.<code>kms</code> also auto-detects whether the dependent variable is categorical or binary. <code>kms</code> accepts the major parameters found in <code>library(keras)</code> as inputs (loss function, batch size, number of epochs, etc.) and allows users to customize basic neural nets (dense neural nets of various input shapes and dropout rates). The final example below also shows how to pass a compiled <code>keras_model_sequential</code> to <code>kms</code> (preferable for more complex models). </p>
+<p><code>kms</code> splits training and test data into sparse matrices.<code>kms</code> also auto-detects whether the dependent variable is categorical, binary, or continuous. <code>kms</code> accepts the major parameters found in <code>library(keras)</code> as inputs (loss function, batch size, number of epochs, etc.) and allows users to customize basic neural nets (dense neural nets of various input shapes and dropout rates). The final example below also shows how to pass a compiled <code>keras_model_sequential</code> to <code>kms</code> (preferable for more complex models). </p>
 
 <h1>IMDB Movie Reviews</h1>
 
-<p>This example works with some of the <code>imdb</code> movie review data that comes with library(<code>keras</code>). Specifically, this example compares the default dense model that <code>ksm</code> generates to the <code>lstm</code> model described <a href="https://keras.rstudio.com/articles/examples/imdb_lstm.html">here</a>. To expedite package building and installation, the code below is not actually run but can be run in under six minutes on a 2017 MacBook Pro with 16 GB of RAM (of which the majority of the time is for the lstm).</p>
+<p>This example works with some of the <code>imdb</code> movie review data that comes with library(<code>keras</code>). Specifically, this example compares the default dense model that <code>ksm</code> generates to the <code>lstm</code> model described <a href="https://keras.rstudio.com/articles/examples/imdb_lstm.html">here</a>. To expedite package building and installation, the code below is not actually run but can be run in under six minutes on a 2017 MacBook Pro with 16 GB of RAM (of which the majority of the time is for the lstm). </p>
 
 <pre><code class="r">max_features &lt;- 5000 # 5,000 words (ranked by popularity) found in movie reviews
 maxlen &lt;- 50  # Cut texts after 50 words (among top max_features most common words) 
@@ -231,7 +231,9 @@ demo_sample &lt;- sample(nrow(imdb_df), Nsample)
 P &lt;- ncol(imdb_df) - 1
 colnames(imdb_df) &lt;- c(&quot;y&quot;, paste0(&quot;x&quot;, 1:P))
 
-out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10)
+out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10, 
+                 scale=NULL) # scale=NULL means leave data on original scale
+
 
 plot(out_dense$history)  # incredibly useful 
 # choose Nepochs to maximize out of sample accuracy
@@ -250,18 +252,24 @@ out_dense$confusion
 <pre><code>Test accuracy: 0.495283 
 </code></pre>
 
-<p>Pretty bad&ndash;that&#39;s a &#39;broken clock&#39; model. Suppose want to add some more layers. </p>
+<p>Pretty bad&ndash;that&#39;s a &#39;broken clock&#39; model. Suppose want to add some more layers. Below find the default setting for <code>layers</code> appart from an additional softmax layer. Notice in <code>layers</code> below anything that appears only once is repeated for each layer as appropriate.</p>
 
-<pre><code class="r">out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10, 
+<pre><code class="r">out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10, seed=123, scale=NULL,
                  layers = list(units = c(512, 256, 128, NA), 
-                               activation = c(&quot;relu&quot;, &quot;relu&quot;, &quot;relu&quot;, &quot;softmax&quot;), 
-                               dropout = c(0.5, 0.4, 0.3, NA)))
+                               activation = c(&quot;softmax&quot;, &quot;relu&quot;, &quot;relu&quot;, &quot;softmax&quot;),
+                               dropout = c(0.75, 0.4, 0.3, NA),
+                               use_bias = TRUE,
+                               kernel_initializer = NULL,
+                               kernel_regularizer = &quot;regularizer_l1&quot;,
+                               bias_regularizer = &quot;regularizer_l1&quot;,
+                               activity_regularizer = &quot;regularizer_l1&quot;
+                               ))
 out_dense$confusion
 </code></pre>
 
 <pre><code>     1
-  0 113
-  1 105
+  0 92
+  1 106
 </code></pre>
 
 <pre><code class="r">cat(&#39;Test accuracy:&#39;, out_dense$evaluations$acc, &quot;\n&quot;)
@@ -272,7 +280,8 @@ out_dense$confusion
 
 <p>No progress. Suppose we want to build an <code>lstm</code> model and pass it to <code>ksm</code>.</p>
 
-<pre><code class="r">k &lt;- keras_model_sequential()
+<pre><code class="r">use_session_with_seed(12345)
+k &lt;- keras_model_sequential()
 k %&gt;%
   layer_embedding(input_dim = max_features, output_dim = 128) %&gt;% 
   layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %&gt;% 
@@ -283,23 +292,45 @@ k %&gt;% compile(
   optimizer = &#39;adam&#39;,
   metrics = c(&#39;accuracy&#39;)
 )
-out_lstm &lt;- kms(input_formula = &quot;y ~ .&quot;, data = imdb_df[demo_sample, ], 
-                keras_model_seq = k, Nepochs = 5, seed = 12345)
+out_lstm &lt;- kms(&quot;y ~ .&quot;, imdb_df[demo_sample, ], 
+                keras_model_seq = k, Nepochs = 10, seed = 12345, scale = NULL)
 out_lstm$confusion
 </code></pre>
 
-<pre><code>    0  1
-  0 80 17
-  1 25 77
+<pre><code>     0  1
+  0 74 23
+  1 23 79
 </code></pre>
 
 <pre><code class="r">cat(&#39;Test accuracy:&#39;, out_lstm$evaluations$acc, &quot;\n&quot;)
 </code></pre>
 
-<pre><code>Test accuracy: 0.7889447 
+<pre><code>Test accuracy: 0.7688442 
 </code></pre>
 
-<p>78.9% out-of-sample accuracy. That&#39;s marked improvement!</p>
+<p>76.8% out-of-sample accuracy. That&#39;s marked improvement!</p>
+
+<p>If you&#39;re OK with <code>-&gt;</code> (right assignment), the above is equivalent to:</p>
+
+<pre><code class="r">use_session_with_seed(12345)
+
+keras_model_sequential() %&gt;%
+
+  layer_embedding(input_dim = max_features, output_dim = 128) %&gt;% 
+
+    layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %&gt;% 
+
+      layer_dense(units = 1, activation = &#39;sigmoid&#39;) %&gt;% 
+
+        compile(loss = &#39;binary_crossentropy&#39;, 
+                optimizer = &#39;adam&#39;, metrics = c(&#39;accuracy&#39;)) %&gt;%
+
+            kms(input_formula = &quot;y ~ .&quot;, data = imdb_df[demo_sample, ], 
+                Nepochs = 10, seed = 12345, scale = NULL) -&gt; 
+  out_lstm
+
+plot(out_lstm$history)
+</code></pre>
 
 <p>For another worked example starting with raw data (from <code>rtweet</code>) visit <a href="https://github.com/rdrr1990/code/blob/master/kms.md">here</a>.</p>
 
