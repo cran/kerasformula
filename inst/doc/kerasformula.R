@@ -24,7 +24,7 @@ opts_chunk$set(comment = "", message = FALSE, warning = FALSE)
 #  colnames(imdb_df) <- c("y", paste0("x", 1:P))
 #  
 #  out_dense <- kms("y ~ .", data = imdb_df[demo_sample, ], Nepochs = 10,
-#                   scale=NULL) # scale=NULL means leave data on original scale
+#                   scale_continuous=NULL) # scale_continuous=NULL means leave data on original scale_continuous
 #  
 #  
 #  plot(out_dense$history)  # incredibly useful
@@ -36,16 +36,11 @@ opts_chunk$set(comment = "", message = FALSE, warning = FALSE)
 #  cat('Test accuracy:', out_dense$evaluations$acc, "\n")
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  out_dense <- kms("y ~ .", data = imdb_df[demo_sample, ], Nepochs = 10, seed=123, scale=NULL,
-#                   layers = list(units = c(512, 256, 128, NA),
-#                                 activation = c("softmax", "relu", "relu", "softmax"),
-#                                 dropout = c(0.75, 0.4, 0.3, NA),
-#                                 use_bias = TRUE,
-#                                 kernel_initializer = NULL,
-#                                 kernel_regularizer = "regularizer_l1",
-#                                 bias_regularizer = "regularizer_l1",
-#                                 activity_regularizer = "regularizer_l1"
-#                                 ))
+#  out_dense <- kms("y ~ .", data = imdb_df[demo_sample, ], Nepochs = 10, seed=123, scale_continuous=NULL,
+#                   N_layers = 6,
+#                   units = c(1024, 512, 256, 128, 64),
+#                   activation = c("relu", "softmax"),
+#                   dropout = 0.4)
 #  out_dense$confusion
 
 ## ---- eval = FALSE-------------------------------------------------------
@@ -65,7 +60,7 @@ opts_chunk$set(comment = "", message = FALSE, warning = FALSE)
 #    metrics = c('accuracy')
 #  )
 #  out_lstm <- kms("y ~ .", imdb_df[demo_sample, ],
-#                  keras_model_seq = k, Nepochs = 10, seed = 12345, scale = NULL)
+#                  keras_model_seq = k, Nepochs = 10, seed = 12345, scale_continuous = NULL)
 #  out_lstm$confusion
 
 ## ---- eval=FALSE---------------------------------------------------------
@@ -87,7 +82,7 @@ opts_chunk$set(comment = "", message = FALSE, warning = FALSE)
 #                  optimizer = 'adam', metrics = c('accuracy')) %>%
 #  
 #              kms(input_formula = "y ~ .", data = imdb_df[demo_sample, ],
-#                  Nepochs = 10, seed = 12345, scale = NULL) ->
+#                  Nepochs = 10, seed = 12345, scale_continuous = NULL) ->
 #    out_lstm
 #  
 #  plot(out_lstm$history)

@@ -201,7 +201,7 @@ hr {
 </head>
 
 <body>
-<p>The goal of this document is to introduce <code>kms</code> (as in <code>keras_model_sequential()</code>), a regression-style function which allows users to call <code>keras</code> neural nets with <code>R</code> <code>formula</code> objects (hence, library(<code>kerasformula</code>)). </p>
+<p>The goal of this document is to introduce <code>kms</code> (as in <code>keras_model_sequential()</code>), a regression-style function which allows users to call <code>keras</code> neural nets with <code>R</code> <code>formula</code> objects (hence, library(<code>kerasformula</code>)). <code>kms()</code> enables users to easily crossvalidate a neural net and eases the coding burden which stems from setting the potentially large number of advanced hyperparameters.</p>
 
 <p>First, make sure that <code>keras</code> is properly configured:</p>
 
@@ -232,7 +232,7 @@ P &lt;- ncol(imdb_df) - 1
 colnames(imdb_df) &lt;- c(&quot;y&quot;, paste0(&quot;x&quot;, 1:P))
 
 out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10, 
-                 scale=NULL) # scale=NULL means leave data on original scale
+                 scale_continuous=NULL) # scale_continuous=NULL means leave data on original scale_continuous
 
 
 plot(out_dense$history)  # incredibly useful 
@@ -252,18 +252,13 @@ out_dense$confusion
 <pre><code>Test accuracy: 0.495283 
 </code></pre>
 
-<p>Pretty bad&ndash;that&#39;s a &#39;broken clock&#39; model. Suppose want to add some more layers. Below find the default setting for <code>layers</code> appart from an additional softmax layer. Notice in <code>layers</code> below anything that appears only once is repeated for each layer as appropriate.</p>
+<p>Pretty bad&ndash;that&#39;s a &#39;broken clock&#39; model. Suppose want to add some more layers, say 6 total. The vector <code>units</code> is only length 5 since the final layer is determined by the type of outcome (one for regression, 2 or more for classification). Inputs, like <code>dropout</code> or <code>activation</code> function below, are repeated so that each layer is specified. (Each layer will have  a 40\% dropout rate and alternate between <code>relu</code> and <code>softmax</code>.)</p>
 
-<pre><code class="r">out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10, seed=123, scale=NULL,
-                 layers = list(units = c(512, 256, 128, NA), 
-                               activation = c(&quot;softmax&quot;, &quot;relu&quot;, &quot;relu&quot;, &quot;softmax&quot;),
-                               dropout = c(0.75, 0.4, 0.3, NA),
-                               use_bias = TRUE,
-                               kernel_initializer = NULL,
-                               kernel_regularizer = &quot;regularizer_l1&quot;,
-                               bias_regularizer = &quot;regularizer_l1&quot;,
-                               activity_regularizer = &quot;regularizer_l1&quot;
-                               ))
+<pre><code class="r">out_dense &lt;- kms(&quot;y ~ .&quot;, data = imdb_df[demo_sample, ], Nepochs = 10, seed=123, scale_continuous=NULL,
+                 N_layers = 6,
+                 units = c(1024, 512, 256, 128, 64), 
+                 activation = c(&quot;relu&quot;, &quot;softmax&quot;),
+                 dropout = 0.4)
 out_dense$confusion
 </code></pre>
 
@@ -293,7 +288,7 @@ k %&gt;% compile(
   metrics = c(&#39;accuracy&#39;)
 )
 out_lstm &lt;- kms(&quot;y ~ .&quot;, imdb_df[demo_sample, ], 
-                keras_model_seq = k, Nepochs = 10, seed = 12345, scale = NULL)
+                keras_model_seq = k, Nepochs = 10, seed = 12345, scale_continuous = NULL)
 out_lstm$confusion
 </code></pre>
 
@@ -326,13 +321,13 @@ keras_model_sequential() %&gt;%
                 optimizer = &#39;adam&#39;, metrics = c(&#39;accuracy&#39;)) %&gt;%
 
             kms(input_formula = &quot;y ~ .&quot;, data = imdb_df[demo_sample, ], 
-                Nepochs = 10, seed = 12345, scale = NULL) -&gt; 
+                Nepochs = 10, seed = 12345, scale_continuous = NULL) -&gt; 
   out_lstm
 
 plot(out_lstm$history)
 </code></pre>
 
-<p>For another worked example starting with raw data (from <code>rtweet</code>) visit <a href="https://github.com/rdrr1990/code/blob/master/kms.md">here</a>.</p>
+<p><code>kerasformula</code> is featured by <a href="https://blogs.rstudio.com/tensorflow/posts/2018-01-24-analyzing-rtweet-data-with-kerasformula/">RStudio&#39;s Tensorflow blog</a>. </p>
 
 </body>
 
