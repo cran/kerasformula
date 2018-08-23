@@ -14,18 +14,24 @@ confusion(object = NULL, y_test = NULL, predictions = NULL,
 
 \item{predictions}{A vector predictions or the name in object (if fit object provided but alternative variable name required).}
 
-\item{return_xtab}{Logical. If TRUE, returns confusion matrix, which is a crosstable with correct predictions on the diagonal (if all levels are predicted at least once). If FALSE, returns (rectangular) table with columns for percent correct, most common misclassification, second most common misclassification, and other predictions. Defaults to TRUE (crosstable-style) only if number of levels < 6.}
+\item{return_xtab}{Logical. If TRUE, returns confusion matrix, which is a crosstable with correct predictions on the diagonal (if all levels are predicted at least once). If FALSE, returns data.frame with columns for percent correct, most common misclassification, second most common misclassification, and other predictions. Only defaults to crosstable-style if y_test has fewer than six levels.}
 
 \item{digits}{Number of digits for proportions when return_xtab=FALSE; if NULL, no rounding is performed.}
 }
 \value{
 confusion matrix or table as specified by return_xtab.
-#' @examples
-mtcars$make <- unlist(lapply(strsplit(rownames(mtcars), " "), function(tokens) tokens[1]))
-company <- if(is_keras_available()) kms(make ~ ., mtcars) else list(y_test = mtcars$make[1:5], predictions = sample(mtcars$make, 5))
-confusion(company)     # same as above confusion$company if is_keras_available() == TRUE
-confusion(company, return_xtab = FALSE) # focus on pCorrect, most common errors
 }
 \description{
 Confusion matrix or (for larger number of levels) confusion table.
+}
+\examples{
+mtcars$make <- unlist(lapply(strsplit(rownames(mtcars), " "), function(tokens) tokens[1]))
+company <- if(is_keras_available()){
+               kms(make ~ ., mtcars, Nepochs=1, verbose=0)
+           }else{
+                 list(y_test = mtcars$make[1:5], 
+                 predictions = sample(mtcars$make, 5))
+                 }
+confusion(company)     # same as above confusion$company if is_keras_available() == TRUE
+confusion(company, return_xtab = FALSE) # focus on pCorrect, most common errors
 }

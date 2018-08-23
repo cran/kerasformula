@@ -1,7 +1,7 @@
 Package: kerasformula
 Type: Package
 Title: A High-Level R Interface for Neural Nets
-Version: 1.5.0
+Version: 1.5.1
 Author: Pete Mohanty [aut, cre]
 Authors@R: person("Pete", "Mohanty", role = c("aut", "cre"), email = "pete.mohanty@gmail.com")
 Maintainer: Pete Mohanty <pete.mohanty@gmail.com>
@@ -18,6 +18,6 @@ Depends: keras, dplyr, Matrix
 Imports: ggplot2
 Suggests: tensorflow, knitr
 NeedsCompilation: yes
-Packaged: 2018-08-14 17:17:30 UTC; mohanty
+Packaged: 2018-08-23 17:28:44 UTC; mohanty
 Repository: CRAN
-Date/Publication: 2018-08-14 18:10:02 UTC
+Date/Publication: 2018-08-23 17:52:14 UTC
